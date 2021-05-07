@@ -699,6 +699,81 @@ Note that the same voltage "explosion" happens, but this time at time
 `900`.
 
 ### Run model, but without HELICS
-I have run this model without HELICS, and using player files to control
-taps in the same manner (run from +16 to -16 with a decrement of 1 each
-minute), and there are no issues - voltages look normal.
+This model can be run without HELICS, using player files to control
+taps instead. This works with no problems. To do this, do the following:
+
+1.  In `models/model.glm` remove the lines that say `module connection;`
+    and remove the `object helics_msg {...}` block.
+    
+2.  At the end of `model.glm`, at the following objects:
+```
+object player {
+    name tap_player_A;
+    parent vreg;
+    property tap_A;
+    file ./tap_player.player;
+    loop 100;
+}
+object player {
+    name tap_player_B;
+    parent vreg;
+    property tap_B;
+    file ./tap_player.player;
+    loop 100;
+}
+object player {
+    name tap_player_C;
+    parent vreg;
+    property tap_C;
+    file ./tap_player.player;
+    loop 100;
+}
+```
+
+3. Create a file `models/tap_player.player` with the following contents:
+```
+2017-12-31 23:59:00, 16,
++60s, 16,
++60s, 15,
++60s, 14,
++60s, 13,
++60s, 12,
++60s, 11,
++60s, 10,
++60s, 9,
++60s, 8,
++60s, 7,
++60s, 6,
++60s, 5,
++60s, 4,
++60s, 3,
++60s, 2,
++60s, 1,
++60s, 0,
++60s, -1,
++60s, -2,
++60s, -3,
++60s, -4,
++60s, -5,
++60s, -6,
++60s, -7,
++60s, -8,
++60s, -9,
++60s, -10,
++60s, -11,
++60s, -12,
++60s, -13,
++60s, -14,
++60s, -15,
++60s, -16,
++60s, -16
+```
+
+4.  Run the model by changing directories to the top level of the repo,
+    and execute `docker compose up`. Note you'll need to use `Ctrl + C`
+    to kill the program, as the `helics_broker` will wait forever for
+    the GridLAB-D federate to join the co-simulation, and it never will
+    since we removed the HELICS connection.
+    
+5.  Take a look at the `.csv` files in the `models` directory, and
+    notice that all is well (no voltage explosions.)
