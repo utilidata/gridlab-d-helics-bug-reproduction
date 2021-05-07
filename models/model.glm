@@ -1,0 +1,340 @@
+// Simple model with a regulator and three triplex loads (and supporting
+// lines, transformers, etc.)
+
+#set minimum_timestep=60.0
+#set profiler=1
+#set relax_naming_rules=1
+#set randomseed=10
+#set suppress_repeat_messages=1
+
+clock {
+	starttime '2017-12-31 23:58:00';
+	stoptime '2018-01-01 00:33:00';
+}
+
+module powerflow {
+    solver_method NR;
+    line_limits FALSE;
+    line_capacitance FALSE;
+}
+
+module connection;
+module tape;
+object helics_msg {
+    name regulator_connection;
+    configure gld_federate.json;
+}
+
+// High voltage transmission node.
+object node {
+	phases ABCN;
+	nominal_voltage 230000;
+	name transmission_node;
+	bustype SWING;
+};
+
+// Configuration for substation step-down transformer.
+object transformer_configuration {
+	name substation_step_down_xfmr_config;
+	primary_voltage 230000;
+	install_type PADMOUNT;
+	impedance 0.00033+0.0022j;
+	secondary_voltage 7200;
+	connect_type WYE_WYE;
+	power_rating 6.6 MVA;
+};
+
+// Node upstream of voltage regulator.
+object meter {
+  name "vreg_node_upstream";
+  phases ABCN;
+  nominal_voltage 7200;
+}
+
+// Substation step-down transformer.
+object transformer {
+    name substation_transformer;
+	phases ABCN;
+	from transmission_node;
+	to vreg_node_upstream;
+	configuration substation_step_down_xfmr_config;
+};
+
+// Regulator configuration. Pretty standard.
+object regulator_configuration {
+  name "vreg_conf";
+  connect_type WYE_WYE;
+  Control MANUAL;
+  // Since we're manualy controlling this regulator and just want to get quick
+  // changes, ensure we use small delays.
+  dwell_time 0.1;
+  time_delay 0.1;
+  // Taps can be changed individually.
+  control_level INDIVIDUAL;
+  raise_taps 16;
+  lower_taps 16;
+  regulation 0.1;
+  Type B;
+  // Put taps at 0 to start.
+  tap_pos_A 0;
+  tap_pos_B 0;
+  tap_pos_C 0;
+}
+
+// Regulator is fed from the step-down transformer.
+object regulator {
+  name "vreg";
+  from "vreg_node_upstream";
+  to "vreg_node_downstream";
+  phases ABC;
+  configuration "vreg_conf";
+}
+
+// Node downstream of the regulator
+object node {
+  name "vreg_node_downstream";
+  phases ABCN;
+  nominal_voltage 7200;
+}
+
+// End of line node where our secondary transformers will be.
+object node {
+  name "eol_node";
+  phases "ABCN";
+  nominal_voltage 7200;
+}
+
+// Line spacing - taken from Example 4.1 of Kersting's book.
+object line_spacing {
+  name "primary_line_spacing";
+  distance_BC 4.5 ft;
+  distance_CN 5.0 ft;
+  distance_AN 5.66 ft;
+  distance_AB 2.5 ft;
+  distance_BN 4.27 ft;
+  distance_AC 7.0 ft;
+  distance_AE 29.0 ft;
+  distance_BE 29.0 ft;
+  distance_CE 29.0 ft;
+  distance_NE 25.0 ft;
+};
+
+// Primary conductor: 336,400 26/7 ACSR, again from Example 4.1 of Kersting.
+object overhead_line_conductor {
+	resistance 0.306;
+	name "primary_conductor";
+	geometric_mean_radius 0.0244 ft;
+};
+
+// Neutral conductor: 4/0 6/1 ACSR, again from Example 4.1 of Kersting.
+object overhead_line_conductor {
+	resistance 0.592;
+	name "neutral_conductor";
+	geometric_mean_radius 0.00814 ft;
+};
+
+// Line configuration
+object line_configuration {
+	name "primary_line_configuration";
+	spacing "primary_line_spacing";
+	conductor_N neutral_conductor;
+	conductor_A primary_conductor;
+	conductor_C primary_conductor;
+	conductor_B primary_conductor;
+};
+
+// Line running from regulator to the end of line node.
+object overhead_line {
+	phases ABCN;
+	from "vreg_node_downstream";
+	name "primary_line";
+	to "eol_node";
+	length 5280;
+	configuration "primary_line_configuration";
+};
+
+// Secondary transformer configuration, borrowed from Kersting example 11.1
+object transformer_configuration {
+	power_rating 50.0;
+	primary_voltage 7200 V;
+	install_type POLETOP;
+	secondary_voltage 120 V;
+	connect_type SINGLE_PHASE_CENTER_TAPPED;
+	resistance 0.011;
+	reactance 0.018;
+	name secondary_transformer_config;
+};
+
+// Triplex nodes downstream of triplex transformers.
+object triplex_node {
+  name triplex_node_A;
+  phases AS;
+  nominal_voltage 120;
+}
+object triplex_node {
+  name triplex_node_B;
+  phases BS;
+  nominal_voltage 120;
+}
+object triplex_node {
+  name triplex_node_C;
+  phases CS;
+  nominal_voltage 120;
+}
+
+// Three secondary transformers.
+object transformer {
+  phases AS;
+  from eol_node;
+  to triplex_node_A;
+  configuration secondary_transformer_config;
+};
+object transformer {
+  phases BS;
+  from eol_node;
+  to triplex_node_B;
+  configuration secondary_transformer_config;
+};
+object transformer {
+  phases CS;
+  from eol_node;
+  to triplex_node_C;
+  configuration secondary_transformer_config;
+};
+
+// Triplex conductors. Borrowed from Example 11.2 of Kersting.
+object triplex_line_conductor {
+	name triplex_conductor;
+	resistance 0.97;
+	geometric_mean_radius 0.111;
+}
+
+// Triplex configuration, also from Kersting 11.2
+object triplex_line_configuration {
+	name triplex_config;
+	diameter 0.368 in;
+	insulation_thickness 0.08 in;
+	conductor_1 triplex_conductor;
+	conductor_2 triplex_conductor;
+	conductor_N triplex_conductor;
+}
+
+// Three triplex meters.
+object triplex_meter {
+    name "triplex_meter_A";
+    phases AS;
+    nominal_voltage 120;
+}
+object triplex_meter {
+    name "triplex_meter_B";
+    phases BS;
+    nominal_voltage 120;
+}
+object triplex_meter {
+    name "triplex_meter_C";
+    phases CS;
+    nominal_voltage 120;
+}
+
+// Triplex lines from transformers to meters.
+object triplex_line {
+    name triplex_line_A;
+    phases AS;
+    from triplex_node_A;
+    to triplex_meter_A;
+    length 100 ft;
+    configuration triplex_config;
+}
+object triplex_line {
+    name triplex_line_B;
+    phases BS;
+    from triplex_node_B;
+    to triplex_meter_B;
+    length 100 ft;
+    configuration triplex_config;
+}
+object triplex_line {
+    name triplex_line_C;
+    phases CS;
+    from triplex_node_C;
+    to triplex_meter_C;
+    length 100 ft;
+    configuration triplex_config;
+}
+
+// Triplex loads
+object triplex_load {
+    name triplex_load_A;
+    parent triplex_meter_A;
+    phases AS;
+    nominal_voltage 120;
+    base_power_12 10000;
+    impedance_fraction_12 0.0;
+    current_fraction_12 1.0;
+    power_fraction_12 0.0;
+    impedance_pf_12 1;
+    current_pf_12 0.9;
+    power_pf_12 1;
+}
+object triplex_load {
+    name triplex_load_B;
+    parent triplex_meter_B;
+    phases BS;
+    nominal_voltage 120;
+    base_power_12 10000;
+    impedance_fraction_12 0.0;
+    current_fraction_12 1.0;
+    power_fraction_12 0.0;
+    impedance_pf_12 1;
+    current_pf_12 0.9;
+    power_pf_12 1;
+}
+object triplex_load {
+    name triplex_load_C;
+    parent triplex_meter_C;
+    phases CS;
+    nominal_voltage 120;
+    base_power_12 10000;
+    impedance_fraction_12 0.0;
+    current_fraction_12 1.0;
+    power_fraction_12 0.0;
+    impedance_pf_12 1;
+    current_pf_12 0.9;
+    power_pf_12 1;
+}
+
+// Record tap positions.
+object recorder {
+    name tap_recorder;
+    parent vreg;
+    file ./tap_output.csv;
+    property tap_A, tap_B, tap_C;
+    interval 60;
+    limit -1;
+}
+
+// Record voltages.
+object recorder {
+    name triplex_recorder_A;
+    parent "triplex_meter_A";
+    property measured_voltage_1, measured_voltage_2;
+    file ./triplex_output_A.csv;
+    interval 60;
+    limit -1;
+}
+object recorder {
+    name triplex_recorder_B;
+    parent "triplex_meter_B";
+    property measured_voltage_1, measured_voltage_2;
+    file ./triplex_output_B.csv;
+    interval 60;
+    limit -1;
+}
+object recorder {
+    name triplex_recorder_C;
+    parent "triplex_meter_C";
+    property measured_voltage_1, measured_voltage_2;
+    file ./triplex_output_C.csv;
+    interval 60;
+    limit -1;
+}

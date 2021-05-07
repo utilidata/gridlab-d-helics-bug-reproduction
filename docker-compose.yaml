@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+
+  helics-broker:
+    container_name: helics-broker
+    build:
+      context: helics_broker
+    entrypoint: ["helics_broker", "-f", "2", "--interface", "tcp://0.0.0.0:4545"]
+
+  tap-controller:
+    container_name: tap-controller
+    build:
+      context: tap_controller
+    # Use -u to "unbuffer" standard output.
+    entrypoint: ["python", "-u", "tap_controller.py", "--broker_address", "helics-broker:4545"]
+
+  gridlab-d:
+    container_name: gridlab-d
+    build:
+      context: helics_gld
+    volumes:
+      - type: bind
+        source: ./models
+        target: /models
+    entrypoint: ["gridlabd", "model.glm"]

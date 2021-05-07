@@ -1,0 +1,55 @@
+{
+  "name": "gld_federate",
+  "broker": "tcp://helics-broker:4545",
+  "period": 60.0,
+  "coretype": "zmq",
+  "publications": [
+    {
+      "global": false,
+      "key": "voltage_A",
+      "type": "complex",
+      "unit": "V",
+      "info": "{\"object\": \"triplex_meter_A\",\n\"property\": \"measured_voltage_1\"\n}"
+    },
+    {
+      "global": false,
+      "key": "voltage_B",
+      "type": "complex",
+      "unit": "V",
+      "info": "{\"object\": \"triplex_meter_B\",\n\"property\": \"measured_voltage_1\"\n}"
+    },
+    {
+      "global": false,
+      "key": "voltage_C",
+      "type": "complex",
+      "unit": "V",
+      "info": "{\"object\": \"triplex_meter_C\",\n\"property\": \"measured_voltage_1\"\n}"
+    },
+    {
+      "global": false,
+      "key": "tap_A",
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}"
+    }
+  ],
+  "subscriptions": [
+    {
+      "key": "tap_controller/tap_A",
+      "required": true,
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}"
+    },
+    {
+      "key": "tap_controller/tap_B",
+      "required": true,
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_B\"\n}"
+    },
+    {
+      "key": "tap_controller/tap_C",
+      "required": true,
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_C\"\n}"
+    }
+  ]
+}
