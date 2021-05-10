@@ -372,7 +372,7 @@ position `16` and decrements them by one until they're at `-16`. To
 illustrate this isn't an issue solving the power flow at lower voltages,
 we'll reverse the taps.
 
-1.  In `tap_controller/tap_controller.py`, replace `range(16, -17, 1)`
+1.  In `tap_controller/tap_controller.py`, replace `range(16, -17, -1)`
     with `range(-16, 17, 1)`.
     
 2.  Execute `docker compose up` and observe the output:
