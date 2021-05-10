@@ -373,14 +373,9 @@ illustrate this isn't an issue solving the power flow at lower voltages,
 we'll reverse the taps.
 
 1.  In `tap_controller/tap_controller.py`, replace `range(16, -17, 1)`
-    with `range(-16, 17, 1)`
+    with `range(-16, 17, 1)`.
     
-2.  Change directories to the top-level of this repository and execute
-    `docker compose build tap-controller` to re-build the
-    `tap-controller` container. This will not take long, as Docker has
-    cached nearly all the build steps.
-    
-3.  Execute `docker compose up` and observe the output:
+2.  Execute `docker compose up` and observe the output:
 
 ```
 Network "gridlab-d-helics-bug-reproduction_default"  Creating

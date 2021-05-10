@@ -12,6 +12,10 @@ services:
     container_name: tap-controller
     build:
       context: tap_controller
+    volumes:
+      - type: bind
+        source: ./tap_controller
+        target: /tap_controller
     # Use -u to "unbuffer" standard output.
     entrypoint: ["python", "-u", "tap_controller.py", "--broker_address", "helics-broker:4545"]
 
