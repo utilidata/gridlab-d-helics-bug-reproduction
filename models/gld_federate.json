@@ -3,53 +3,87 @@
   "broker": "tcp://helics-broker:4545",
   "period": 60.0,
   "coretype": "zmq",
-  "publications": [
+  "endpoints": [
     {
       "global": false,
-      "key": "voltage_A",
+      "name": "voltage_A",
       "type": "complex",
       "unit": "V",
-      "info": "{\"object\": \"triplex_meter_A\",\n\"property\": \"measured_voltage_1\"\n}"
+      "info": "{\"object\": \"triplex_meter_A\",\n\"property\": \"measured_voltage_1\"\n}",
+      "destination": "grid_controller/voltage_A"
     },
     {
       "global": false,
-      "key": "voltage_B",
+      "name": "voltage_B",
       "type": "complex",
       "unit": "V",
-      "info": "{\"object\": \"triplex_meter_B\",\n\"property\": \"measured_voltage_1\"\n}"
+      "info": "{\"object\": \"triplex_meter_B\",\n\"property\": \"measured_voltage_1\"\n}",
+      "destination": "grid_controller/voltage_B"
     },
     {
       "global": false,
-      "key": "voltage_C",
+      "name": "voltage_C",
       "type": "complex",
       "unit": "V",
-      "info": "{\"object\": \"triplex_meter_C\",\n\"property\": \"measured_voltage_1\"\n}"
+      "info": "{\"object\": \"triplex_meter_C\",\n\"property\": \"measured_voltage_1\"\n}",
+      "destination": "grid_controller/voltage_C"
     },
     {
       "global": false,
-      "key": "tap_A",
+      "name": "tap_A_output",
       "type": "int",
-      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}"
-    }
-  ],
-  "subscriptions": [
-    {
-      "key": "grid_controller/tap_A",
-      "required": true,
-      "type": "int",
-      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}"
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}",
+      "destination": "grid_controller/tap_A"
     },
     {
-      "key": "grid_controller/tap_B",
-      "required": true,
+      "global": false,
+      "name": "tap_B_output",
       "type": "int",
-      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_B\"\n}"
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_B\"\n}",
+      "destination": "grid_controller/tap_B"
     },
     {
-      "key": "grid_controller/tap_C",
-      "required": true,
+      "global": false,
+      "name": "tap_C_output",
       "type": "int",
-      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_C\"\n}"
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_C\"\n}",
+      "destination": "grid_controller/tap_C"
+    },
+    {
+      "global": false,
+      "name": "inverter_power_output",
+      "type": "complex",
+      "unit": "VA",
+      "info": "{\"object\": \"single_phase_inverter\",\n\"property\": \"VA_Out\"\n}",
+      "destination": "grid_controller/inverter_power"
+    },
+    {
+      "global": false,
+      "name": "tap_A_input",
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}",
+      "subscriptions": ["grid_controller/tap_A_output"]
+    },
+    {
+      "global": false,
+      "name": "tap_B_input",
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_B\"\n}",
+      "subscriptions": ["grid_controller/tap_B_output"]
+    },
+    {
+      "global": false,
+      "name": "tap_C_input",
+      "type": "int",
+      "info": "{\"object\": \"vreg\",\n\"property\": \"tap_C\"\n}",
+      "subscriptions": ["grid_controller/tap_C_output"]
+    },
+    {
+      "global": false,
+      "name": "inverter_Q_input",
+      "type": "double",
+      "info": "{\"object\": \"single_phase_inverter\",\n\"property\": \"Q_Out\"\n}",
+      "subscriptions": ["grid_controller/inverter_Q_output"]
     }
   ]
 }

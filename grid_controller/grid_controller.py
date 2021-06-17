@@ -38,118 +38,68 @@ LOG = logging.getLogger('grid_controller')
 LOG.setLevel(logging.INFO)
 
 
-def main(broker_address="helics-broker:4545", log_level=None):
-    fed_init_string = "--federates=1"
-    delta_t = 1.0
+def main():
+    # Create message federate.
+    fed = h.helicsCreateMessageFederateFromConfig('grid_controller.json')
+    LOG.info("Message federate created")
 
-    if broker_address is not None:
-        fed_init_string += f' --broker_address=tcp://{broker_address}'
+    # Gather the endpoints (ep).
+    ep_dict = {}
+    for ep_idx in range(h.helicsFederateGetEndpointCount(fed)):
+        # Get an endpoint object.
+        ep_obj = h.helicsFederateGetEndpointByIndex(fed, ep_idx)
+        # Extract name, type, and destination.
+        ep_name = h.helicsEndpointGetName(ep_obj)
+        ep_type = h.helicsEndpointGetType(ep_obj)
+        ep_dest = h.helicsEndpointGetDefaultDestination(ep_obj)
 
-    helics_version = h.helicsGetVersion()
+        # Store the object and data type in the appropriate container.
+        _ep_dict = {'ep': ep_obj, 'dtype': ep_type, 'destination': ep_dest}
+        ep_dict[ep_name] = _ep_dict
 
-    LOG.info("Helics version = %s", helics_version)
-
-    # Create Federate Info object that describes the federate properties #
-    fed_info = h.helicsCreateFederateInfo()
-
-    # Set Federate name #
-    fed_name = "grid_controller"
-    h.helicsFederateInfoSetCoreName(fed_info, fed_name)
-
-    # Set core type from string #
-    h.helicsFederateInfoSetCoreTypeFromString(fed_info, "zmq")
-
-    # Set up logging.
-    if log_level is not None:
-        h.helicsFederateInfoSetIntegerProperty(
-            fed_info, h.helics_property_int_log_level, log_level
-        )
-
-    # Federate init string #
-    h.helicsFederateInfoSetCoreInitString(fed_info, fed_init_string)
-
-    # Set the message interval (timedelta) for federate. Note the
-    # HELICS minimum message time interval is 1 ns and by default
-    # it uses a time delta of 1 second. What is provided to the
-    # setTimedelta routine is a multiplier for the default timedelta.
-
-    # Set one second message interval #
-    h.helicsFederateInfoSetTimeProperty(
-        fed_info, h.helics_property_time_delta, delta_t)
-
-    # Create combination federate #
-    combo_fed = h.helicsCreateCombinationFederate(fed_name, fed_info)
-    LOG.info("Combination federate created")
-
-    # Register the tap publications #
-    pub_dict = {}
-    for phase in 'ABC':
-        key = f"tap_{phase}"
-        pub = h.helicsFederateRegisterTypePublication(
-            combo_fed, key, "int", "")
-        pub_dict[key] = pub
-
-    #
-    LOG.info("Tap position publications registered.")
-
-    # Register the subscriptions.
-    sub_dict = {}
-    for phase in 'ABC':
-        key = f"voltage_{phase}"
-        sub = h.helicsFederateRegisterSubscription(
-            combo_fed, f"gld_federate/{key}", "V"
-        )
-        sub_dict[key] = sub
-
-    LOG.info("Voltage message subscriptions registered.")
-
-    # Also subscribe to tap positions to confirm that they happen.
-    tap_sub = h.helicsFederateRegisterSubscription(
-        combo_fed, f"gld_federate/tap_A", ""
-    )
+        LOG.info('Registered endpoint %s', ep_name)
 
     # Enter execution mode #
-    h.helicsFederateEnterExecutingMode(combo_fed)
+    h.helicsFederateEnterExecutingMode(fed)
     LOG.info("Entering execution mode.")
 
-    for t, tap in zip(count(), range(16, -17, -1)):
+    for t, control_signal in zip(count(), range(16, -17, -1)):
 
         # Get time.
-        current_time = h.helicsFederateRequestTime(combo_fed, t * 60)
+        time_request = t * 60
+        LOG.debug('Requesting time from broker: %d', time_request)
+        current_time = h.helicsFederateRequestTime(fed, time_request)
         LOG.info('*' * 80)
         LOG.info('Received time from broker: %s', current_time)
 
-        # Grab current tap.
-        LOG.info('GridLAB-D reports tap_A at position %d',
-                 h.helicsInputGetInteger(tap_sub))
+        # Either send out commands in to GridLAB-D, or log output from
+        # GridLAB-D.
+        for ep_name, ep_data in ep_dict.items():
+            try:
+                destination = ep_data['destination'].split('/')[1]
+            except (KeyError, IndexError):
+                # Log output from GridLAB-D
+                # Skip if there's no message. Not very Pythonic, but is
+                # HELICS best practice.
+                if not h.helicsEndpointHasMessage(ep_data['ep']):
+                    LOG.warning('No message found on %s', ep_name)
+                else:
+                    # Grab the message and raw data from the endpoint.
+                    msg = h.helicsEndpointGetMessage(ep_data['ep'])
 
-        # Publish tap positions.
-        for pub in pub_dict.values():
-            h.helicsPublicationPublishDouble(pub, tap)
+                    LOG.info('GridLAB-D reports %s at %s',
+                             ep_name.split('/')[1], msg.data)
+            else:
+                msg = h.helicsEndpointCreateMessageObject(ep_data['ep'])
+                LOG.info('Sending %s to %s.', str(control_signal), destination)
+                h.helicsMessageSetData(msg, str(control_signal))
+                h.helicsEndpointSendMessage(ep_data['ep'], msg)
 
-        LOG.info("Commanded taps to position %d", tap)
-
-        # Log voltages.
-        for phase, sub in sub_dict.items():
-            real, imag = h.helicsInputGetComplex(sub)
-            v = complex(float(real), float(imag))
-            LOG.debug('Phase %s real: %f', phase, real)
-            LOG.debug('Phase %s imag: %f', phase, imag)
-            LOG.info(f'Phase {phase} voltage is {abs(v):.2f}.')
-
-    h.helicsFederateFinalize(combo_fed)
+    h.helicsFederateFinalize(fed)
     LOG.info("Federate finalized.")
 
-    h.helicsFederateFree(combo_fed)
+    h.helicsFederateFree(fed)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--broker_address',
-        help=('IP address (or host) and port of broker, e.g., "0.0.0.0:4545" '
-              'or "helics-broker:4545"'),
-        default='helics-broker:4545'
-    )
-    args = parser.parse_args()
-    main(broker_address=args.broker_address)
+    main()

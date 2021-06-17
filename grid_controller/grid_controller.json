@@ -1,0 +1,73 @@
+{
+  "name": "grid_controller",
+  "period": 60.0,
+  "coretype": "zmq",
+  "corename": "tap_controller",
+  "broker": "tcp://helics-broker:4545",
+  "endpoints": [
+    {
+      "global": false,
+      "name": "tap_A_output",
+      "type": "int",
+      "destination": "gld_federate/tap_A_input"
+    },
+    {
+      "global": false,
+      "name": "tap_B_output",
+      "type": "int",
+      "destination": "gld_federate/tap_B_input"
+    },
+    {
+      "global": false,
+      "name": "tap_C_output",
+      "type": "int",
+      "destination": "gld_federate/tap_C_input"
+    },
+    {
+      "global": false,
+      "name": "inverter_Q_output",
+      "type": "double",
+      "unit": "VAr",
+      "destination": "gld_federate/inverter_Q_input"
+    },
+    {
+      "global": false,
+      "name": "inverter_power",
+      "type": "complex",
+      "unit": "VA"
+    },
+    {
+      "global": false,
+      "name": "tap_A",
+      "type": "int"
+    },
+    {
+      "global": false,
+      "name": "tap_B",
+      "type": "int"
+    },
+    {
+      "global": false,
+      "name": "tap_C",
+      "type": "int"
+    },
+    {
+      "global": false,
+      "name": "voltage_A",
+      "type": "complex",
+      "unit": "V"
+    },
+    {
+      "global": false,
+      "name": "voltage_B",
+      "type": "complex",
+      "unit": "V"
+    },
+    {
+      "global": false,
+      "name": "voltage_C",
+      "type": "complex",
+      "unit": "V"
+    }
+  ]
+}
