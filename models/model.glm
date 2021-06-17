@@ -13,8 +13,8 @@ clock {
 }
 
 module powerflow {
-    # Use FBS until the following is resolved:
-    # https://github.com/gridlab-d/gridlab-d/issues/1299
+    // Use FBS until the following is resolved:
+    // https://github.com/gridlab-d/gridlab-d/issues/1299
     solver_method FBS;
     line_limits FALSE;
     line_capacitance FALSE;
@@ -79,10 +79,10 @@ object regulator_configuration {
   lower_taps 16;
   regulation 0.1;
   Type B;
-  // Put taps at 0 to start.
-  tap_pos_A 0;
-  tap_pos_B 0;
-  tap_pos_C 0;
+  // Put taps at 16 to start.
+  tap_pos_A 16;
+  tap_pos_B 16;
+  tap_pos_C 16;
 }
 
 // Regulator is fed from the step-down transformer.
