@@ -34,7 +34,7 @@ import helics as h
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] [%(name)s]: %(message)s")
-LOG = logging.getLogger('tap_controller')
+LOG = logging.getLogger('grid_controller')
 LOG.setLevel(logging.INFO)
 
 
@@ -53,7 +53,7 @@ def main(broker_address="helics-broker:4545", log_level=None):
     fed_info = h.helicsCreateFederateInfo()
 
     # Set Federate name #
-    fed_name = "tap_controller"
+    fed_name = "grid_controller"
     h.helicsFederateInfoSetCoreName(fed_info, fed_name)
 
     # Set core type from string #
@@ -81,7 +81,7 @@ def main(broker_address="helics-broker:4545", log_level=None):
     combo_fed = h.helicsCreateCombinationFederate(fed_name, fed_info)
     LOG.info("Combination federate created")
 
-    # Register the publications #
+    # Register the tap publications #
     pub_dict = {}
     for phase in 'ABC':
         key = f"tap_{phase}"
@@ -89,6 +89,7 @@ def main(broker_address="helics-broker:4545", log_level=None):
             combo_fed, key, "int", "")
         pub_dict[key] = pub
 
+    #
     LOG.info("Tap position publications registered.")
 
     # Register the subscriptions.

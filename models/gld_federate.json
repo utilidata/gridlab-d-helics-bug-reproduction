@@ -34,19 +34,19 @@
   ],
   "subscriptions": [
     {
-      "key": "tap_controller/tap_A",
+      "key": "grid_controller/tap_A",
       "required": true,
       "type": "int",
       "info": "{\"object\": \"vreg\",\n\"property\": \"tap_A\"\n}"
     },
     {
-      "key": "tap_controller/tap_B",
+      "key": "grid_controller/tap_B",
       "required": true,
       "type": "int",
       "info": "{\"object\": \"vreg\",\n\"property\": \"tap_B\"\n}"
     },
     {
-      "key": "tap_controller/tap_C",
+      "key": "grid_controller/tap_C",
       "required": true,
       "type": "int",
       "info": "{\"object\": \"vreg\",\n\"property\": \"tap_C\"\n}"
