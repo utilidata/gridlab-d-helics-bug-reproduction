@@ -9,15 +9,15 @@ services:
     entrypoint: ["helics_broker", "-f", "2", "--interface", "tcp://0.0.0.0:4545"]
 
   tap-controller:
-    container_name: tap-controller
+    container_name: grid-controller
     build:
-      context: tap_controller
+      context: grid_controller
     volumes:
       - type: bind
-        source: ./tap_controller
-        target: /tap_controller
+        source: ./grid_controller
+        target: /grid_controller
     # Use -u to "unbuffer" standard output.
-    entrypoint: ["python", "-u", "tap_controller.py", "--broker_address", "helics-broker:4545"]
+    entrypoint: ["python", "-u", "grid_controller.py", "--broker_address", "helics-broker:4545"]
 
   gridlab-d:
     container_name: gridlab-d
