@@ -5,10 +5,10 @@
 FROM python:3.7-slim-buster as base
 
 # Branches/tags for HELICS and GLD
-# Latest release as of 2021-05-07
-ENV HELICS_BRANCH=v2.7.0
-# Tip of develop as of 2021-05-07
-ENV GLD_BRANCH=7d2931eeb4c22520328cb02bad8dca1f13b74bb1
+# Latest release as of 2021-06-17
+ENV HELICS_BRANCH=v2.7.1
+# Tip of develop as of 2021-06-17
+ENV GLD_BRANCH=9a3d705bfc18c6e539a4e28f3a1e7febbcbdac33
 
 # Where to put our built software?
 ENV HELICS_INSTALL_PATH=/usr/local
