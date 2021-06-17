@@ -13,7 +13,9 @@ clock {
 }
 
 module powerflow {
-    solver_method NR;
+    # Use FBS until the following is resolved:
+    # https://github.com/gridlab-d/gridlab-d/issues/1299
+    solver_method FBS;
     line_limits FALSE;
     line_capacitance FALSE;
 }
@@ -24,6 +26,8 @@ object helics_msg {
     name regulator_connection;
     configure gld_federate.json;
 }
+
+module generators;
 
 // High voltage transmission node.
 object node {
@@ -234,6 +238,27 @@ object triplex_meter {
     name "triplex_meter_C";
     phases CS;
     nominal_voltage 120;
+}
+
+// A single inverter behind triplex_meter_A
+object inverter {
+    name "single_phase_inverter";
+    phases AS;
+    parent "triplex_meter_A";
+    generator_status ONLINE;
+    generator_mode CONSTANT_PQ;
+    inverter_type FOUR_QUADRANT;
+    four_quadrant_control_mode CONSTANT_PQ;
+    inverter_efficiency 1.0;
+    // 250 kW - a big boy.
+    rated_power 250000.000;
+    // This approximately cancels out the real power demand.
+    P_Out 10000.0;
+    // We'll control Q.
+    Q_Out 1000.0;
+    // Infinite power supply ;)
+    V_In 250;
+    I_In 10000;
 }
 
 // Triplex lines from transformers to meters.
