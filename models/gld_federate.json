@@ -82,6 +82,7 @@
       "global": false,
       "name": "inverter_Q_input",
       "type": "double",
+      "unit": "VAr",
       "info": "{\"object\": \"single_phase_inverter\",\n\"property\": \"Q_Out\"\n}",
       "subscriptions": ["grid_controller/inverter_Q_output"]
     }
